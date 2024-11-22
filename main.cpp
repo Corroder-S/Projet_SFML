@@ -9,12 +9,15 @@ bool meteor1b = false;
 bool meteor2b = false;
 bool meteor3b = false;
 bool meteor4b = false;
-
+bool canShoot = true;
+bool shooting = false;
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "Fenêtre SFML");
     Clock clock;
+    Clock shoot;
     float temps = 0;
+    float cd = 0;
     srand(time(0));
     CircleShape meteor1(70);
     meteor1.setPosition(2000, 100);
@@ -31,15 +34,35 @@ int main() {
     RectangleShape vaisseau(Vector2f(200, 50));
     vaisseau.setPosition(200, 500);
 
+    RectangleShape missile(Vector2f(2000, 20));
+    missile.setFillColor(Color::Blue);
+                    
     window.setFramerateLimit(60);
 
     while (window.isOpen()) {
+        int x = vaisseau.getPosition().x;
+        int y = vaisseau.getPosition().y + 15;
+        missile.setPosition(Vector2f(x, y));
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
-            
+            if (event.type == Event::KeyPressed) {
+                if (event.key.code == Keyboard::Space && canShoot) {
+                    if (missile.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b)
+                        meteor1b = false;
+                    if (missile.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b)
+                        meteor2b = false;
+                    if (missile.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b)
+                        meteor3b = false;
+                    if (missile.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b)
+                        meteor4b = false;
+                    shooting = true;
+                    canShoot = false;
+                    shoot.restart();
+                }
             }
+        }
             
     if (meteor1b) {
         meteor1.move(-20, 0);
@@ -89,7 +112,14 @@ int main() {
         vies--;
     }
 
+    cd = shoot.getElapsedTime().asSeconds();
+
+    if (cd >= 5 and canShoot == false){
+        canShoot = true;
+    }
+
     temps = clock.getElapsedTime().asSeconds();
+    
 
     if (temps >= 2.0f)
     {
@@ -117,6 +147,9 @@ int main() {
             window.draw(meteor3);
         if (meteor4b)
             window.draw(meteor4);
+        if (shooting){
+            window.draw(missile);
+            shooting = false;}
         window.draw(vaisseau);
         window.display();
         temps++;
