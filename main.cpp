@@ -28,6 +28,9 @@ int main() {
         return -1;
     }
 
+    Text aff_gameover("GAME OVER", font, 100);
+    aff_gameover.setPosition(560, 350);
+
     Text aff_score("Score : 0", font, 50);
     aff_score.setPosition(800, 90);
 
@@ -57,7 +60,7 @@ int main() {
     Sprite backgroundimage(background);
 
     CircleShape coeur(50);
-    coeur.setPosition(Vector2f(100, 75));
+    coeur.setPosition(100, 75);
     coeur.setTexture(&life);
 
 
@@ -91,7 +94,7 @@ int main() {
     window.setFramerateLimit(60);
 
     while (window.isOpen()) {
-        scorecount = global.getElapsedTime().asSeconds() * 100;
+        if (!gameover) scorecount = global.getElapsedTime().asSeconds() * 100;
         String score = to_string(scorecount);
         aff_score.setString("Score : " + score);
         int x = vaisseau.getPosition().x;
@@ -192,7 +195,9 @@ int main() {
     }
     if (!gameover){
         if (vies == 0) {
-            window.close();
+            gameover = true;
+            aff_score.setPosition(610, 550);
+            aff_score.setString("Score final : " + score);
             }
             window.clear();
             window.draw(backgroundimage);
@@ -230,8 +235,15 @@ int main() {
             window.draw(vaisseau);
             window.display();
             temps++;
-        
         }
+    else {
+        
+        window.clear();
+        window.draw(backgroundimage);
+        window.draw(aff_gameover);
+        window.draw(aff_score);
+        window.display();
+    }
     }
     return 0;
 }
