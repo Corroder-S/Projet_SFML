@@ -4,6 +4,8 @@
 using namespace sf;
 using namespace std;
 
+float delay;
+int vitesse;
 int vies = 3;
 bool meteor1b = false;
 bool meteor2b = false;
@@ -12,6 +14,7 @@ bool meteor4b = false;
 bool canShoot = true;
 bool shooting = false;
 bool gameover = false;
+bool startscreen = true;
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "Fenêtre SFML");
@@ -63,7 +66,6 @@ int main() {
     coeur.setPosition(100, 75);
     coeur.setTexture(&life);
 
-
     CircleShape meteor1(70);
     meteor1.setPosition(2000, 100);
     meteor1.setTexture(&meteor);
@@ -83,14 +85,26 @@ int main() {
     RectangleShape vaisseau(Vector2f(200, 50));
     vaisseau.setPosition(200, 500);
     vaisseau.setTexture(&spacecraft);
-
+    
     RectangleShape missile(Vector2f(2000, 20));
     missile.setFillColor(Color::Blue);
 
     RectangleShape can_shoot_indicator(Vector2f(100, 100));
     can_shoot_indicator.setPosition(1500, 75);
     can_shoot_indicator.setFillColor(Color::Green);
-                    
+
+    RectangleShape easy(Vector2f(200, 100));
+    easy.setPosition(700, 400);
+    easy.setFillColor(Color::Black);
+
+    RectangleShape medium(Vector2f(200, 100));
+    medium.setPosition(700, 550);
+    medium.setFillColor(Color::Black);
+
+    RectangleShape hard(Vector2f(200, 100));
+    hard.setPosition(700, 700);
+    hard.setFillColor(Color::Black);
+    
     window.setFramerateLimit(60);
 
     while (window.isOpen()) {
@@ -104,6 +118,26 @@ int main() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+            if (event.type == Event::MouseButtonPressed && startscreen) {
+                if (event.mouseButton.button == Mouse::Left) {
+                    if (easy.getGlobalBounds().contains(Mouse::getPosition().x, Mouse::getPosition().y )){
+                        startscreen = false;
+                        vitesse = 20;
+                        delay = 2.0f;
+                    }
+                    if (medium.getGlobalBounds().contains(Mouse::getPosition().x, Mouse::getPosition().y)) {
+                        startscreen = false;
+                        vitesse = 30;
+                        delay = 1.5f;
+                    }
+                    if (hard.getGlobalBounds().contains(Mouse::getPosition().x, Mouse::getPosition().y)) {
+                        startscreen = false;
+                        vitesse = 40;
+                        delay = 1.0f;
+                    }
+                    
+                }
+            }
             if (event.type == Event::KeyPressed) {
                 if (event.key.code == Keyboard::Space && canShoot) {
                     if (missile.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b)
@@ -122,35 +156,35 @@ int main() {
         }
             
     if (meteor1b) {
-        meteor1.move(-20, 0);
+        meteor1.move(-vitesse, 0);
         if (meteor1.getPosition().x < -100) {
             meteor1b = false;
         }
     }
     if (meteor2b) {
-        meteor2.move(-20, 0);
+        meteor2.move(-vitesse, 0);
         if (meteor2.getPosition().x < -100) {
             meteor2b = false;
         }
     }
     if (meteor3b) {
-        meteor3.move(-20, 0);
+        meteor3.move(-vitesse, 0);
         if (meteor3.getPosition().x < -100) {
             meteor3b = false;
         }
     }
     if (meteor4b) {
-        meteor4.move(-20, 0);
+        meteor4.move(-vitesse, 0);
         if (meteor4.getPosition().x < -100) {
             meteor4b = false;
         }
     }
 
     if (Keyboard::isKeyPressed(Keyboard::Up)) {
-        vaisseau.move(0, -10);
+        vaisseau.move(0, -vitesse/2);
     }
     if (Keyboard::isKeyPressed(Keyboard::Down)) {
-        vaisseau.move(0, +10);
+        vaisseau.move(0, +vitesse/2);
     }
     if (vaisseau.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b) {
         meteor1b = false;
@@ -179,7 +213,7 @@ int main() {
     
 
 
-    if (temps >= 2.0f)
+    if (temps >= delay)
     {
         for (int i = 0; i < 3; i++){
         int x = rand() % 4;
@@ -193,7 +227,15 @@ int main() {
         clock.restart();
     
     }
-    if (!gameover){
+    if (startscreen) {
+        window.clear();
+        window.draw(backgroundimage);
+        window.draw(easy);
+        window.draw(medium);
+        window.draw(hard);
+        window.display();
+    }
+    else if (!gameover){
         if (vies == 0) {
             gameover = true;
             aff_score.setPosition(610, 550);
