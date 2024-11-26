@@ -7,6 +7,7 @@ using namespace std;
 float delay;
 int vitesse;
 int vies = 3;
+int scoremulti;
 bool meteor1b = false;
 bool meteor2b = false;
 bool meteor3b = false;
@@ -37,6 +38,19 @@ int main() {
     Text aff_score("Score : 0", font, 50);
     aff_score.setPosition(800, 90);
 
+    Text title("A TRAVERS LA \n   CEINTURE", font, 120);
+    title.setFillColor(Color::Color(0x008dd2ff));
+    title.setPosition(400, 75);
+
+    Text easyText("EASY", font, 30);
+    easyText.setFillColor(Color::Black);
+
+    Text mediumText("MEDIUM", font, 30);
+    mediumText.setFillColor(Color::Black);
+
+    Text hardText("HARD", font, 30);
+    hardText.setFillColor(Color::Black);
+
     Text aff_can_shoot("FIRE", font, 20);
     aff_can_shoot.setPosition(1522, 112);
     aff_can_shoot.setFillColor(Color::Black);
@@ -59,6 +73,19 @@ int main() {
     if (!background.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\space.jpg")) {
         return -1;
     }
+
+    Texture button_on;
+    if (!button_on.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\button_on.png")) {
+        return -1;
+    }
+
+    Texture button_off;
+    if (!button_off.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\button_off.png")) {
+        return -1;
+    }
+
+
+
 
     Sprite backgroundimage(background);
 
@@ -89,26 +116,34 @@ int main() {
     RectangleShape missile(Vector2f(2000, 20));
     missile.setFillColor(Color::Blue);
 
-    RectangleShape can_shoot_indicator(Vector2f(100, 100));
+    CircleShape can_shoot_indicator(50);
     can_shoot_indicator.setPosition(1500, 75);
     can_shoot_indicator.setFillColor(Color::Green);
 
     RectangleShape easy(Vector2f(200, 100));
-    easy.setPosition(700, 400);
-    easy.setFillColor(Color::Black);
+    easy.setPosition(830, 450);
+    easy.setTexture(&button_off);
+    easyText.setOrigin(easyText.getGlobalBounds().getSize() / 2.f + easyText.getLocalBounds().getPosition());
+    easyText.setPosition(easy.getPosition() + (easy.getSize() / 2.f));
 
     RectangleShape medium(Vector2f(200, 100));
-    medium.setPosition(700, 550);
-    medium.setFillColor(Color::Black);
+    medium.setPosition(830, 600);
+    medium.setTexture(&button_off);
+    mediumText.setOrigin(mediumText.getGlobalBounds().getSize() / 2.f + mediumText.getLocalBounds().getPosition());
+    mediumText.setPosition(medium.getPosition() + (medium.getSize() / 2.f));
+
 
     RectangleShape hard(Vector2f(200, 100));
-    hard.setPosition(700, 700);
-    hard.setFillColor(Color::Black);
+    hard.setPosition(830, 750);
+    hard.setTexture(&button_off);
+    hardText.setOrigin(hardText.getGlobalBounds().getSize() / 2.f + hardText.getLocalBounds().getPosition());
+    hardText.setPosition(hard.getPosition() + (hard.getSize() / 2.f));
+
     
     window.setFramerateLimit(60);
 
     while (window.isOpen()) {
-        if (!gameover) scorecount = global.getElapsedTime().asSeconds() * 100;
+        if (!gameover && !startscreen) scorecount = global.getElapsedTime().asSeconds() * scoremulti;
         String score = to_string(scorecount);
         aff_score.setString("Score : " + score);
         int x = vaisseau.getPosition().x;
@@ -120,20 +155,23 @@ int main() {
                 window.close();
             if (event.type == Event::MouseButtonPressed && startscreen) {
                 if (event.mouseButton.button == Mouse::Left) {
-                    if (easy.getGlobalBounds().contains(Mouse::getPosition().x, Mouse::getPosition().y )){
+                    if (easy.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y )){
                         startscreen = false;
                         vitesse = 20;
                         delay = 2.0f;
+                        scoremulti = 100;
                     }
-                    if (medium.getGlobalBounds().contains(Mouse::getPosition().x, Mouse::getPosition().y)) {
+                    if (medium.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) {
                         startscreen = false;
                         vitesse = 30;
                         delay = 1.5f;
+                        scoremulti = 200;
                     }
-                    if (hard.getGlobalBounds().contains(Mouse::getPosition().x, Mouse::getPosition().y)) {
+                    if (hard.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) {
                         startscreen = false;
                         vitesse = 40;
                         delay = 1.0f;
+                        scoremulti = 400;
                     }
                     
                 }
@@ -154,6 +192,13 @@ int main() {
                 }
             }
         }
+
+        if (easy.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) easy.setTexture(&button_on);
+        else easy.setTexture(&button_off);
+        if (medium.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) medium.setTexture(&button_on);
+        else medium.setTexture(&button_off);
+        if (hard.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) hard.setTexture(&button_on);
+        else hard.setTexture(&button_off);
             
     if (meteor1b) {
         meteor1.move(-vitesse, 0);
@@ -230,9 +275,14 @@ int main() {
         window.clear();
         window.draw(backgroundimage);
         window.draw(easy);
+        window.draw(easyText);
         window.draw(medium);
+        window.draw(mediumText);
         window.draw(hard);
+        window.draw(hardText);
+        window.draw(title);
         window.display();
+        global.restart();
     }
     else if (!gameover){
         if (vies == 0) {
