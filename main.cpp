@@ -213,19 +213,18 @@ int main() {
     
 
 
-    if (temps >= delay)
+    if (temps >= delay && !startscreen && !gameover)
     {
         for (int i = 0; i < 3; i++){
         int x = rand() % 4;
         switch (x) {
-        case 0:meteor1.setPosition(2000, 100); meteor1b = true; break;
-        case 1:meteor2.setPosition(2000, 300); meteor2b = true; break;
-        case 2:meteor3.setPosition(2000, 500); meteor3b = true; break;
-        case 3:meteor4.setPosition(2000, 700); meteor4b = true; break;
+        case 0: if (meteor1b == false) meteor1.setPosition(2000, 100); meteor1b = true; break;
+        case 1: if (meteor2b == false) meteor2.setPosition(2000, 300); meteor2b = true; break;
+        case 2: if (meteor3b == false) meteor3.setPosition(2000, 500); meteor3b = true; break;
+        case 3: if (meteor4b == false) meteor4.setPosition(2000, 700); meteor4b = true; break;
         }
         }
         clock.restart();
-    
     }
     if (startscreen) {
         window.clear();
