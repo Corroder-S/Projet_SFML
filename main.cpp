@@ -8,6 +8,8 @@ float delay;
 int vitesse;
 int vies = 3;
 int scoremulti;
+int spawnrate;
+int inv_delay;
 bool meteor1b = false;
 bool meteor2b = false;
 bool meteor3b = false;
@@ -16,10 +18,13 @@ bool canShoot = true;
 bool shooting = false;
 bool gameover = false;
 bool startscreen = true;
+bool invicibilityb = false;
+bool inv_state = false;
+
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(1920, 1080), "Fenêtre SFML");
-    Clock global;
+    sf::RenderWindow window(sf::VideoMode(1920, 1080), "A Travers la Ceinture v0.8");
+    Clock scoreclock;
     Clock clock;
     Clock shoot;
     int scorecount;
@@ -108,6 +113,14 @@ int main() {
     CircleShape meteor4(70);
     meteor4.setPosition(2000, 700);
     meteor4.setTexture(&meteor);
+    
+    CircleShape can_shoot_indicator(50);
+    can_shoot_indicator.setPosition(1500, 75);
+    can_shoot_indicator.setFillColor(Color::Green);
+
+    CircleShape invincibility(50);
+    invincibility.setPosition(2000, 700);
+    invincibility.setFillColor(Color::Blue);
 
     RectangleShape vaisseau(Vector2f(200, 50));
     vaisseau.setPosition(200, 500);
@@ -115,10 +128,6 @@ int main() {
     
     RectangleShape missile(Vector2f(2000, 20));
     missile.setFillColor(Color::Blue);
-
-    CircleShape can_shoot_indicator(50);
-    can_shoot_indicator.setPosition(1500, 75);
-    can_shoot_indicator.setFillColor(Color::Green);
 
     RectangleShape easy(Vector2f(200, 100));
     easy.setPosition(830, 450);
@@ -143,7 +152,7 @@ int main() {
     window.setFramerateLimit(60);
 
     while (window.isOpen()) {
-        if (!gameover && !startscreen) scorecount = global.getElapsedTime().asSeconds() * scoremulti;
+        if (!gameover && !startscreen) scorecount = scoreclock.getElapsedTime().asSeconds() * scoremulti;
         String score = to_string(scorecount);
         aff_score.setString("Score : " + score);
         int x = vaisseau.getPosition().x;
@@ -225,6 +234,14 @@ int main() {
         }
     }
 
+    if (invicibilityb) {
+        invincibility.move(-vitesse / 2, 0);
+        if (invincibility.getPosition().x < -100) {
+            invicibilityb = false;
+            spawnrate = 600;
+        }
+    }
+
     if (Keyboard::isKeyPressed(Keyboard::Up)) {
         vaisseau.move(0, -vitesse/2);
     }
@@ -248,6 +265,11 @@ int main() {
         vies--;
     }
 
+    if (vaisseau.getGlobalBounds().intersects(invincibility.getGlobalBounds()) && invicibilityb) {
+        invicibilityb = false;
+        inv_state = true;
+    }
+
     cd = shoot.getElapsedTime().asSeconds();
 
     if (cd >= 3 and canShoot == false){
@@ -257,20 +279,29 @@ int main() {
     temps = clock.getElapsedTime().asSeconds();
     
 
-
     if (temps >= delay && !startscreen && !gameover)
     {
-        for (int i = 0; i < 3; i++){
-        int x = rand() % 4;
-        switch (x) {
-        case 0: if (meteor1b == false) meteor1.setPosition(2000, 100); meteor1b = true; break;
-        case 1: if (meteor2b == false) meteor2.setPosition(2000, 300); meteor2b = true; break;
-        case 2: if (meteor3b == false) meteor3.setPosition(2000, 500); meteor3b = true; break;
-        case 3: if (meteor4b == false) meteor4.setPosition(2000, 700); meteor4b = true; break;
-        }
+        for (int i = 0; i < 3; i++) {
+            int x = rand() % 4;
+            switch (x) {
+            case 0: if (meteor1b == false) meteor1.setPosition(2000, 100); meteor1b = true; break;
+            case 1: if (meteor2b == false) meteor2.setPosition(2000, 300); meteor2b = true; break;
+            case 2: if (meteor3b == false) meteor3.setPosition(2000, 500); meteor3b = true; break;
+            case 3: if (meteor4b == false) meteor4.setPosition(2000, 700); meteor4b = true; break;
+            }
         }
         clock.restart();
     }
+
+    if (!invicibilityb && !startscreen && !gameover && spawnrate == 0) {
+        int spawn = rand() % 100;
+        if (spawn < 2) {
+            int x = rand() % 700;
+            invincibility.setPosition(2000, x + 100);
+            invicibilityb = true;
+        }
+    }
+
     if (startscreen) {
         window.clear();
         window.draw(backgroundimage);
@@ -282,7 +313,7 @@ int main() {
         window.draw(hardText);
         window.draw(title);
         window.display();
-        global.restart();
+        scoreclock.restart();
     }
     else if (!gameover){
         if (vies == 0) {
@@ -320,14 +351,18 @@ int main() {
                 window.draw(meteor3);
             if (meteor4b)
                 window.draw(meteor4);
+            if (invicibilityb)
+                window.draw(invincibility);
             if (shooting){
                 window.draw(missile);
                 shooting = false;}
             window.draw(vaisseau);
             window.display();
             temps++;
+            if (spawnrate > 0)
+                spawnrate--;
         }
-    else {
+    else if(gameover){
         
         window.clear();
         window.draw(backgroundimage);
@@ -338,3 +373,4 @@ int main() {
     }
     return 0;
 }
+
