@@ -34,9 +34,10 @@ int main() {
     Clock scoreclock;
     Clock clock;
     Clock shoot;
-
     Clock blink;
     srand(time(0));
+
+    // Police :
 
     Font font;
     if (!font.loadFromFile("scifie.ttf")) {
