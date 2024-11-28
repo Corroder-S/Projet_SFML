@@ -58,6 +58,9 @@ int main() {
     Text hardText("HARD", font, 30);
     hardText.setFillColor(Color::Black);
 
+    Text restartText("RESTART", font, 30);
+    restartText.setFillColor(Color::Black);
+
     Text aff_can_shoot("FIRE", font, 20);
     aff_can_shoot.setPosition(1522, 112);
     aff_can_shoot.setFillColor(Color::Black);
@@ -165,14 +168,17 @@ int main() {
     mediumText.setOrigin(mediumText.getGlobalBounds().getSize() / 2.f + mediumText.getLocalBounds().getPosition());
     mediumText.setPosition(medium.getPosition() + (medium.getSize() / 2.f));
 
-
-
     RectangleShape hard(Vector2f(200, 100));
     hard.setPosition(830, 750);
     hard.setTexture(&button_off);
     hardText.setOrigin(hardText.getGlobalBounds().getSize() / 2.f + hardText.getLocalBounds().getPosition());
     hardText.setPosition(hard.getPosition() + (hard.getSize() / 2.f));
 
+    RectangleShape restart(Vector2f(200, 100));
+    restart.setPosition(830, 750);
+    restart.setTexture(&button_off);
+    restartText.setOrigin(restartText.getGlobalBounds().getSize() / 2.f + restartText.getLocalBounds().getPosition());
+    restartText.setPosition(restart.getPosition() + (restart.getSize() / 2.f));
     
     window.setFramerateLimit(60);
 
@@ -190,27 +196,33 @@ int main() {
 
             // Boutons :
 
-            if (event.type == Event::MouseButtonPressed && startscreen) {
+            if (event.type == Event::MouseButtonPressed) {
                 if (event.mouseButton.button == Mouse::Left) {
-                    if (easy.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y )){
+                    if (easy.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y  )&& startscreen){
                         startscreen = false;
                         vitesse = 20;
                         delay = 2.0f;
                         scoremulti = 100;
                     }
-                    if (medium.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) {
+                    if (medium.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y )&& startscreen) {
                         startscreen = false;
                         vitesse = 30;
                         delay = 1.5f;
                         scoremulti = 200;
                     }
-                    if (hard.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) {
+                    if (hard.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y) && startscreen) {
                         startscreen = false;
                         vitesse = 40;
                         delay = 1.0f;
                         scoremulti = 400;
                     }
-                    
+                    if (restart.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y) && gameover) {
+                        startscreen = true;
+                        vies = 3;
+                        gameover = false;
+                        aff_score.setPosition(800, 90);
+                        explosion_delay = 0;
+                    }
                 }
             }
             
@@ -233,6 +245,17 @@ int main() {
             }
         }
 
+    // Cooldown du tir :
+
+        cd = shoot.getElapsedTime().asSeconds();
+
+        if (cd >= 3 and canShoot == false) {
+            canShoot = true;
+        }
+
+        temps = clock.getElapsedTime().asSeconds();
+
+
     // Texture changeante des boutons :
 
         if (easy.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) easy.setTexture(&button_on);
@@ -241,208 +264,201 @@ int main() {
         else medium.setTexture(&button_off);
         if (hard.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) hard.setTexture(&button_on);
         else hard.setTexture(&button_off);
+        if (restart.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) restart.setTexture(&button_on);
+        else restart.setTexture(&button_off);
             
 
 
     // Scrolling météores et power up:
 
-    if (meteor1b) {
-        meteor1.move(-vitesse, 0);
-        if (meteor1.getPosition().x < -100) {
-            meteor1b = false;
+        if (meteor1b) {
+            meteor1.move(-vitesse, 0);
+            if (meteor1.getPosition().x < -100) {
+                meteor1b = false;
+            }
         }
-    }
-    if (meteor2b) {
-        meteor2.move(-vitesse, 0);
-        if (meteor2.getPosition().x < -100) {
-            meteor2b = false;
+        if (meteor2b) {
+            meteor2.move(-vitesse, 0);
+            if (meteor2.getPosition().x < -100) {
+                meteor2b = false;
+            }
         }
-    }
-    if (meteor3b) {
-        meteor3.move(-vitesse, 0);
-        if (meteor3.getPosition().x < -100) {
-            meteor3b = false;
+        if (meteor3b) {
+            meteor3.move(-vitesse, 0);
+            if (meteor3.getPosition().x < -100) {
+                meteor3b = false;
+            }
         }
-    }
-    if (meteor4b) {
-        meteor4.move(-vitesse, 0);
-        if (meteor4.getPosition().x < -100) {
-            meteor4b = false;
+        if (meteor4b) {
+            meteor4.move(-vitesse, 0);
+            if (meteor4.getPosition().x < -100) {
+                meteor4b = false;
+            }
         }
-    }
 
-    if (invicibilityb) {
-        invincibility.move(-vitesse / 2, 0);
-        if (invincibility.getPosition().x < -100) {
-            invicibilityb = false;
-            inv_delay = 600;
+        if (invicibilityb) {
+            invincibility.move(-vitesse / 2, 0);
+            if (invincibility.getPosition().x < -100) {
+                invicibilityb = false;
+                inv_delay = 600;
+            }
         }
-    }
 
     // Movement du vaisseau :
 
-    if (Keyboard::isKeyPressed(Keyboard::Up) && vaisseau.getPosition().y > 0) {
-        vaisseau.move(0, -vitesse/2);
-    }
-    if (Keyboard::isKeyPressed(Keyboard::Down) && vaisseau.getPosition().y < 950) {
-        vaisseau.move(0, +vitesse/2);
-    }
+        if (Keyboard::isKeyPressed(Keyboard::Up) && vaisseau.getPosition().y > 0) {
+            vaisseau.move(0, -vitesse/2);
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Down) && vaisseau.getPosition().y < 950) {
+            vaisseau.move(0, +vitesse/2);
+        }
 
-    if (inv_delay > 600)
-        vaisseau.setTexture(&spacecraft_inv);
-    else
-        vaisseau.setTexture(&spacecraft);
+        if (inv_delay > 600)
+            vaisseau.setTexture(&spacecraft_inv);
+        else
+            vaisseau.setTexture(&spacecraft);
 
     // Collisions avec météores et power up : 
 
-    if (vaisseau.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b && inv_delay <= 600) {
-        meteor1b = false;
-        vies--;
-        explosion.setPosition(meteor1.getPosition());
-        explosion_delay = 60;
-    }
-    if (vaisseau.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b && inv_delay <= 600) {
-        meteor2b = false;
-        vies--;
-        explosion.setPosition(meteor2.getPosition());
-        explosion_delay = 60;
-    }
-    if (vaisseau.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b && inv_delay <= 600) {
-        meteor3b = false;
-        vies--;
-        explosion.setPosition(meteor3.getPosition());
-        explosion_delay = 60;
-    }
-    if (vaisseau.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b && inv_delay <= 600) {
-        meteor4b = false;
-        vies--;
-        explosion.setPosition(meteor4.getPosition());
-        explosion_delay = 60;
-    }
+        if (vaisseau.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b && inv_delay <= 600) {
+            meteor1b = false;
+            vies--;
+            explosion.setPosition(meteor1.getPosition());
+            explosion_delay = 60;
+        }
+        if (vaisseau.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b && inv_delay <= 600) {
+            meteor2b = false;
+            vies--;
+            explosion.setPosition(meteor2.getPosition());
+            explosion_delay = 60;
+        }
+        if (vaisseau.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b && inv_delay <= 600) {
+            meteor3b = false;
+            vies--;
+            explosion.setPosition(meteor3.getPosition());
+            explosion_delay = 60;
+        }
+        if (vaisseau.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b && inv_delay <= 600) {
+            meteor4b = false;
+            vies--;
+            explosion.setPosition(meteor4.getPosition());
+            explosion_delay = 60;
+        }
 
-    if (vaisseau.getGlobalBounds().intersects(invincibility.getGlobalBounds()) && invicibilityb) {
-        invicibilityb = false;
-        inv_state = true;
-        inv_delay = 900;
-    }
+        if (vaisseau.getGlobalBounds().intersects(invincibility.getGlobalBounds()) && invicibilityb) {
+            invicibilityb = false;
+            inv_state = true;
+            inv_delay = 900;
+        }
 
-    // Cooldown du tir :
-
-    cd = shoot.getElapsedTime().asSeconds();
-
-    if (cd >= 3 and canShoot == false){
-        canShoot = true;
-    }
-
-    temps = clock.getElapsedTime().asSeconds();
-    
 
     // Boucle de création des météores :
 
-    if (temps >= delay && !startscreen && !gameover)
-    {
-        for (int i = 0; i < 3; i++) {
-            int x = rand() % 4;
-            switch (x) {
-            case 0: if (meteor1b == false) meteor1.setPosition(2000, 100); meteor1b = true; break;
-            case 1: if (meteor2b == false) meteor2.setPosition(2000, 300); meteor2b = true; break;
-            case 2: if (meteor3b == false) meteor3.setPosition(2000, 500); meteor3b = true; break;
-            case 3: if (meteor4b == false) meteor4.setPosition(2000, 700); meteor4b = true; break;
+        if (temps >= delay && !startscreen && !gameover)
+        {
+            for (int i = 0; i < 3; i++) {
+                int x = rand() % 4;
+                switch (x) {
+                case 0: if (meteor1b == false) meteor1.setPosition(2000, 100); meteor1b = true; break;
+                case 1: if (meteor2b == false) meteor2.setPosition(2000, 300); meteor2b = true; break;
+                case 2: if (meteor3b == false) meteor3.setPosition(2000, 500); meteor3b = true; break;
+                case 3: if (meteor4b == false) meteor4.setPosition(2000, 700); meteor4b = true; break;
+                }
             }
+            clock.restart();
         }
-        clock.restart();
-    }
 
     // Apparition du power up d'invicibilité :
 
-    if (!invicibilityb && !startscreen && !gameover && inv_delay == 0) {
-        int spawn = rand() % 100;
-        if (spawn < 2) {
-            int x = rand() % 700;
-            invincibility.setPosition(2000, x + 100);
-            invicibilityb = true;
+        if (!invicibilityb && !startscreen && !gameover && inv_delay == 0) {
+            int spawn = rand() % 100;
+            if (spawn < 2) {
+                int x = rand() % 700;
+                invincibility.setPosition(2000, x + 100);
+                invicibilityb = true;
+            }
         }
-    }
 
     // Display de l'écran de départ :
 
-    if (startscreen) {
-        window.clear();
-        window.draw(backgroundimage);
-        window.draw(easy);
-        window.draw(easyText);
-        window.draw(medium);
-        window.draw(mediumText);
-        window.draw(hard);
-        window.draw(hardText);
-        window.draw(title);
-        window.display();
-        scoreclock.restart();
-    }
+        if (startscreen) {
+            window.clear();
+            window.draw(backgroundimage);
+            window.draw(easy);
+            window.draw(easyText);
+            window.draw(medium);
+            window.draw(mediumText);
+            window.draw(hard);
+            window.draw(hardText);
+            window.draw(title);
+            window.display();
+            scoreclock.restart();
+        }
 
     // Display de la phase de jeu :
 
-    else if (!gameover){
-        if (vies == 0) {
-            gameover = true;
-            aff_score.setPosition(610, 550);
-            aff_score.setString("Score final : " + score);
-            }
-            window.clear();
-            window.draw(backgroundimage);
-            window.draw(aff_score);
-            window.draw(coeur);
-              if (vies >= 2) {
-                  coeur.setPosition(200, 75);
-                  window.draw(coeur);
-                  if (vies == 3) {
-                      coeur.setPosition(300, 75);
-                      window.draw(coeur);
-                    }
+        else if (!gameover){
+            if (vies == 0) {
+                gameover = true;
+                aff_score.setPosition(610, 550);
                 }
-            coeur.setPosition(100, 75);
-            if (canShoot) {
-                window.draw(can_shoot_indicator);
+                window.clear();
+                window.draw(backgroundimage);
+                window.draw(aff_score);
+                window.draw(coeur);
+                  if (vies >= 2) {
+                      coeur.setPosition(200, 75);
+                      window.draw(coeur);
+                      if (vies == 3) {
+                          coeur.setPosition(300, 75);
+                          window.draw(coeur);
+                        }
+                    }
+                coeur.setPosition(100, 75);
+                if (canShoot) {
+                    window.draw(can_shoot_indicator);
+                }
+                else {
+                    can_shoot_indicator.setFillColor(Color::Red);
+                    window.draw(can_shoot_indicator);
+                    can_shoot_indicator.setFillColor(Color::Green);
+                }
+                window.draw(aff_can_shoot);
+                if (meteor1b)
+                    window.draw(meteor1);
+                if (meteor2b)
+                    window.draw(meteor2);
+                if (meteor3b)
+                    window.draw(meteor3);
+                if (meteor4b)
+                    window.draw(meteor4);
+                if (invicibilityb)
+                    window.draw(invincibility);
+                if (shooting){
+                    window.draw(missile);
+                    shooting = false;}
+                window.draw(vaisseau);
+                if (explosion_delay > 0) {
+                    window.draw(explosion);
+                    explosion_delay--;
+                }
+                window.display();
+                temps++;
+                if (inv_delay > 0)
+                    inv_delay--;
             }
-            else {
-                can_shoot_indicator.setFillColor(Color::Red);
-                window.draw(can_shoot_indicator);
-                can_shoot_indicator.setFillColor(Color::Green);
-            }
-            window.draw(aff_can_shoot);
-            if (meteor1b)
-                window.draw(meteor1);
-            if (meteor2b)
-                window.draw(meteor2);
-            if (meteor3b)
-                window.draw(meteor3);
-            if (meteor4b)
-                window.draw(meteor4);
-            if (invicibilityb)
-                window.draw(invincibility);
-            if (shooting){
-                window.draw(missile);
-                shooting = false;}
-            window.draw(vaisseau);
-            if (explosion_delay > 0) {
-                window.draw(explosion);
-                explosion_delay--;
-            }
-            window.display();
-            temps++;
-            if (inv_delay > 0)
-                inv_delay--;
-        }
 
     // Display de l'écran de game over :
 
-    else if(gameover){
+        else if(gameover){
         
-        window.clear();
-        window.draw(backgroundimage);
-        window.draw(aff_gameover);
-        window.draw(aff_score);
-        window.display();
+            window.clear();
+            window.draw(backgroundimage);
+            window.draw(aff_gameover);
+            window.draw(aff_score);
+            window.draw(restart);
+            window.draw(restartText);
+            window.display();
     }
     }
     return 0;
