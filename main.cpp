@@ -8,8 +8,8 @@ float delay;
 int vitesse;
 int vies = 3;
 int scoremulti;
-int spawnrate;
 int inv_delay;
+int explosion_delay;
 bool meteor1b = false;
 bool meteor2b = false;
 bool meteor3b = false;
@@ -37,6 +37,8 @@ int main() {
         return -1;
     }
 
+    // Textes :
+
     Text aff_gameover("GAME OVER", font, 100);
     aff_gameover.setPosition(560, 350);
 
@@ -60,6 +62,9 @@ int main() {
     aff_can_shoot.setPosition(1522, 112);
     aff_can_shoot.setFillColor(Color::Black);
 
+
+    // Textures :
+
     Texture life;
     if (!life.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\coeur.png")){
         return -1;}
@@ -69,8 +74,23 @@ int main() {
         return -1;
     }
 
+    Texture explosionT;
+    if (!explosionT.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\boom.png")) {
+        return -1;
+    }
+
+    Texture inv_shield;
+    if (!inv_shield.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\shield.png")) {
+        return -1;
+    }
+
     Texture spacecraft;
     if (!spacecraft.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\spacecraft.png")) {
+        return -1;
+    }
+
+    Texture spacecraft_inv;
+    if (!spacecraft_inv.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\spacecraft_inv.png")) {
         return -1;
     }
 
@@ -90,9 +110,12 @@ int main() {
     }
 
 
-
+    // Objets :
 
     Sprite backgroundimage(background);
+
+    CircleShape explosion(70);
+    explosion.setTexture(&explosionT);
 
     CircleShape coeur(50);
     coeur.setPosition(100, 75);
@@ -120,11 +143,12 @@ int main() {
 
     CircleShape invincibility(50);
     invincibility.setPosition(2000, 700);
-    invincibility.setFillColor(Color::Blue);
+    invincibility.setTexture(&inv_shield);
 
     RectangleShape vaisseau(Vector2f(200, 50));
     vaisseau.setPosition(200, 500);
     vaisseau.setTexture(&spacecraft);
+
     
     RectangleShape missile(Vector2f(2000, 20));
     missile.setFillColor(Color::Blue);
@@ -140,6 +164,7 @@ int main() {
     medium.setTexture(&button_off);
     mediumText.setOrigin(mediumText.getGlobalBounds().getSize() / 2.f + mediumText.getLocalBounds().getPosition());
     mediumText.setPosition(medium.getPosition() + (medium.getSize() / 2.f));
+
 
 
     RectangleShape hard(Vector2f(200, 100));
@@ -162,6 +187,9 @@ int main() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+
+            // Boutons :
+
             if (event.type == Event::MouseButtonPressed && startscreen) {
                 if (event.mouseButton.button == Mouse::Left) {
                     if (easy.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y )){
@@ -185,6 +213,9 @@ int main() {
                     
                 }
             }
+            
+            // Collision des météores avec le missile/laser :
+
             if (event.type == Event::KeyPressed) {
                 if (event.key.code == Keyboard::Space && canShoot) {
                     if (missile.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b)
@@ -202,6 +233,8 @@ int main() {
             }
         }
 
+    // Texture changeante des boutons :
+
         if (easy.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) easy.setTexture(&button_on);
         else easy.setTexture(&button_off);
         if (medium.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) medium.setTexture(&button_on);
@@ -209,6 +242,10 @@ int main() {
         if (hard.getGlobalBounds().contains(Mouse::getPosition(window).x, Mouse::getPosition(window).y)) hard.setTexture(&button_on);
         else hard.setTexture(&button_off);
             
+
+
+    // Scrolling météores et power up:
+
     if (meteor1b) {
         meteor1.move(-vitesse, 0);
         if (meteor1.getPosition().x < -100) {
@@ -238,37 +275,58 @@ int main() {
         invincibility.move(-vitesse / 2, 0);
         if (invincibility.getPosition().x < -100) {
             invicibilityb = false;
-            spawnrate = 600;
+            inv_delay = 600;
         }
     }
 
-    if (Keyboard::isKeyPressed(Keyboard::Up)) {
+    // Movement du vaisseau :
+
+    if (Keyboard::isKeyPressed(Keyboard::Up) && vaisseau.getPosition().y > 0) {
         vaisseau.move(0, -vitesse/2);
     }
-    if (Keyboard::isKeyPressed(Keyboard::Down)) {
+    if (Keyboard::isKeyPressed(Keyboard::Down) && vaisseau.getPosition().y < 950) {
         vaisseau.move(0, +vitesse/2);
     }
-    if (vaisseau.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b) {
+
+    if (inv_delay > 600)
+        vaisseau.setTexture(&spacecraft_inv);
+    else
+        vaisseau.setTexture(&spacecraft);
+
+    // Collisions avec météores et power up : 
+
+    if (vaisseau.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b && inv_delay <= 600) {
         meteor1b = false;
         vies--;
+        explosion.setPosition(meteor1.getPosition());
+        explosion_delay = 60;
     }
-    if (vaisseau.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b) {
+    if (vaisseau.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b && inv_delay <= 600) {
         meteor2b = false;
         vies--;
+        explosion.setPosition(meteor2.getPosition());
+        explosion_delay = 60;
     }
-    if (vaisseau.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b) {
+    if (vaisseau.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b && inv_delay <= 600) {
         meteor3b = false;
         vies--;
+        explosion.setPosition(meteor3.getPosition());
+        explosion_delay = 60;
     }
-    if (vaisseau.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b) {
+    if (vaisseau.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b && inv_delay <= 600) {
         meteor4b = false;
         vies--;
+        explosion.setPosition(meteor4.getPosition());
+        explosion_delay = 60;
     }
 
     if (vaisseau.getGlobalBounds().intersects(invincibility.getGlobalBounds()) && invicibilityb) {
         invicibilityb = false;
         inv_state = true;
+        inv_delay = 900;
     }
+
+    // Cooldown du tir :
 
     cd = shoot.getElapsedTime().asSeconds();
 
@@ -278,6 +336,8 @@ int main() {
 
     temps = clock.getElapsedTime().asSeconds();
     
+
+    // Boucle de création des météores :
 
     if (temps >= delay && !startscreen && !gameover)
     {
@@ -293,7 +353,9 @@ int main() {
         clock.restart();
     }
 
-    if (!invicibilityb && !startscreen && !gameover && spawnrate == 0) {
+    // Apparition du power up d'invicibilité :
+
+    if (!invicibilityb && !startscreen && !gameover && inv_delay == 0) {
         int spawn = rand() % 100;
         if (spawn < 2) {
             int x = rand() % 700;
@@ -301,6 +363,8 @@ int main() {
             invicibilityb = true;
         }
     }
+
+    // Display de l'écran de départ :
 
     if (startscreen) {
         window.clear();
@@ -315,6 +379,9 @@ int main() {
         window.display();
         scoreclock.restart();
     }
+
+    // Display de la phase de jeu :
+
     else if (!gameover){
         if (vies == 0) {
             gameover = true;
@@ -357,11 +424,18 @@ int main() {
                 window.draw(missile);
                 shooting = false;}
             window.draw(vaisseau);
+            if (explosion_delay > 0) {
+                window.draw(explosion);
+                explosion_delay--;
+            }
             window.display();
             temps++;
-            if (spawnrate > 0)
-                spawnrate--;
+            if (inv_delay > 0)
+                inv_delay--;
         }
+
+    // Display de l'écran de game over :
+
     else if(gameover){
         
         window.clear();
