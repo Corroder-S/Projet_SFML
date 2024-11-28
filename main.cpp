@@ -4,12 +4,16 @@
 using namespace sf;
 using namespace std;
 
+float temps = 0;
+float cd = 0;
 float delay;
 int vitesse;
 int vies = 3;
 int scoremulti;
 int inv_delay;
 int explosion_delay;
+int hit_delay;
+int scorecount;
 bool meteor1b = false;
 bool meteor2b = false;
 bool meteor3b = false;
@@ -20,20 +24,22 @@ bool gameover = false;
 bool startscreen = true;
 bool invicibilityb = false;
 bool inv_state = false;
-
+bool hit = false;
+bool blink1 = true;
+bool blink2 = false;
+bool temp;
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "A Travers la Ceinture v0.8");
     Clock scoreclock;
     Clock clock;
     Clock shoot;
-    int scorecount;
-    float temps = 0;
-    float cd = 0;
+
+    Clock blink;
     srand(time(0));
 
     Font font;
-    if (!font.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\scifie.ttf")) {
+    if (!font.loadFromFile("scifie.ttf")) {
         return -1;
     }
 
@@ -69,46 +75,51 @@ int main() {
     // Textures :
 
     Texture life;
-    if (!life.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\coeur.png")){
+    if (!life.loadFromFile("coeur.png")){
         return -1;}
 
     Texture meteor;
-    if (!meteor.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\meteor.png")) {
+    if (!meteor.loadFromFile("meteor.png")) {
         return -1;
     }
 
     Texture explosionT;
-    if (!explosionT.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\boom.png")) {
+    if (!explosionT.loadFromFile("boom.png")) {
         return -1;
     }
 
     Texture inv_shield;
-    if (!inv_shield.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\shield.png")) {
+    if (!inv_shield.loadFromFile("shield.png")) {
         return -1;
     }
 
     Texture spacecraft;
-    if (!spacecraft.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\spacecraft.png")) {
+    if (!spacecraft.loadFromFile("spacecraft.png")) {
         return -1;
     }
 
     Texture spacecraft_inv;
-    if (!spacecraft_inv.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\spacecraft_inv.png")) {
+    if (!spacecraft_inv.loadFromFile("spacecraft_inv.png")) {
+        return -1;
+    }
+
+    Texture spacecraft_hit;
+    if (!spacecraft_hit.loadFromFile("spaceship_hit.png")) {
         return -1;
     }
 
     Texture background;
-    if (!background.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\space.jpg")) {
+    if (!background.loadFromFile("space.jpg")) {
         return -1;
     }
 
     Texture button_on;
-    if (!button_on.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\button_on.png")) {
+    if (!button_on.loadFromFile("button_on.png")) {
         return -1;
     }
 
     Texture button_off;
-    if (!button_off.loadFromFile("C:\\Users\\sbrossard\\source\\repos\\Corroder-S\\Projet_SFML\\button_off.png")) {
+    if (!button_off.loadFromFile("button_off.png")) {
         return -1;
     }
 
@@ -313,38 +324,69 @@ int main() {
             vaisseau.move(0, +vitesse/2);
         }
 
+    //Texture du vaisseau si power up invincibilité :
+
         if (inv_delay > 600)
             vaisseau.setTexture(&spacecraft_inv);
         else
             vaisseau.setTexture(&spacecraft);
 
+    // Gestion de la phase d'invincibilité après une collision et du clignotemement de texture :
+
+        
+        if (hit_delay == 0)
+            hit = false;
+        else {
+            int x = blink.getElapsedTime().asMilliseconds();
+            if (x > 200) {
+                temp = blink1;
+                blink1 = blink2;
+                blink2 = temp;
+                blink.restart();
+            }
+            if (blink1){
+                vaisseau.setTexture(&spacecraft_hit);
+            }
+                
+            else if (blink2)
+                vaisseau.setTexture(&spacecraft);
+        }
+
     // Collisions avec météores et power up : 
-
-        if (vaisseau.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b && inv_delay <= 600) {
-            meteor1b = false;
-            vies--;
-            explosion.setPosition(meteor1.getPosition());
-            explosion_delay = 60;
+        if (inv_delay <= 600 && !hit) {
+            if (vaisseau.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b) {
+                meteor1b = false;
+                vies--;
+                hit = true;
+                hit_delay = delay*120;
+                explosion.setPosition(meteor1.getPosition());
+                explosion_delay = 60;
+            }
+            if (vaisseau.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b) {
+                meteor2b = false;
+                vies--;
+                hit = true;
+                hit_delay = delay*120;
+                explosion.setPosition(meteor2.getPosition());
+                explosion_delay = 60;
+            }
+            if (vaisseau.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b) {
+                meteor3b = false;
+                vies--;
+                hit = true;
+                hit_delay = delay*120;
+                explosion.setPosition(meteor3.getPosition());
+                explosion_delay = 60;
+            }
+            if (vaisseau.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b) {
+                meteor4b = false;
+                vies--;
+                hit = true;
+                hit_delay = delay*120;
+                explosion.setPosition(meteor4.getPosition());
+                explosion_delay = 60;
+            }
         }
-        if (vaisseau.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b && inv_delay <= 600) {
-            meteor2b = false;
-            vies--;
-            explosion.setPosition(meteor2.getPosition());
-            explosion_delay = 60;
-        }
-        if (vaisseau.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b && inv_delay <= 600) {
-            meteor3b = false;
-            vies--;
-            explosion.setPosition(meteor3.getPosition());
-            explosion_delay = 60;
-        }
-        if (vaisseau.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b && inv_delay <= 600) {
-            meteor4b = false;
-            vies--;
-            explosion.setPosition(meteor4.getPosition());
-            explosion_delay = 60;
-        }
-
         if (vaisseau.getGlobalBounds().intersects(invincibility.getGlobalBounds()) && invicibilityb) {
             invicibilityb = false;
             inv_state = true;
@@ -446,6 +488,8 @@ int main() {
                 temps++;
                 if (inv_delay > 0)
                     inv_delay--;
+                if (hit_delay > 0)
+                    hit_delay--;
             }
 
     // Display de l'écran de game over :
