@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/audio.hpp>
 #include <iostream>
 #include <ctime>
 using namespace sf;
@@ -72,6 +73,65 @@ int main() {
     aff_can_shoot.setPosition(1522, 112);
     aff_can_shoot.setFillColor(Color::Black);
 
+    // Sons buffers :
+
+    SoundBuffer explosion_buffer;
+    if (!explosion_buffer.loadFromFile("explosion_sound.ogg")) {
+        return -1;
+    }
+
+    SoundBuffer laser_buffer;
+    if (!laser_buffer.loadFromFile("laser_gun_shot.ogg")) {
+        return -1;
+    }
+
+    SoundBuffer powerup_buffer;
+    if (!powerup_buffer.loadFromFile("powerup.ogg")) {
+        return -1;
+    }
+
+    SoundBuffer reload_buffer;
+    if (!reload_buffer.loadFromFile("reload.ogg")) {
+        return -1;
+    }
+
+    SoundBuffer death_buffer;
+    if (!death_buffer.loadFromFile("death.ogg")) {
+        return -1;
+    }
+
+    SoundBuffer music_buffer;
+    if (!music_buffer.loadFromFile("music_8bit.ogg")) {
+        return -1;
+    }
+
+    SoundBuffer gameover_buffer;
+    if (!gameover_buffer.loadFromFile("gameover_theme.ogg")) {
+        return -1;
+    }
+
+    // Sons :
+
+    Sound explosion_sound;
+    explosion_sound.setBuffer(explosion_buffer);
+
+    Sound laser_sound;
+    laser_sound.setBuffer(laser_buffer);
+
+    Sound powerup_sound;
+    powerup_sound.setBuffer(powerup_buffer);
+
+    Sound reload_sound;
+    reload_sound.setBuffer(reload_buffer);
+
+    Sound death_sound;
+    death_sound.setBuffer(death_buffer);
+
+    Sound main_music;
+    main_music.setBuffer(music_buffer);
+
+    Sound gameover_music;
+    gameover_music.setBuffer(gameover_buffer);
 
     // Textures :
 
@@ -165,8 +225,8 @@ int main() {
     vaisseau.setTexture(&spacecraft);
 
     
-    RectangleShape missile(Vector2f(2000, 20));
-    missile.setFillColor(Color::Blue);
+    RectangleShape laser(Vector2f(2000, 20));
+    laser.setFillColor(Color::Blue);
 
     RectangleShape easy(Vector2f(200, 100));
     easy.setPosition(830, 450);
@@ -200,7 +260,7 @@ int main() {
         aff_score.setString("Score : " + score);
         int x = vaisseau.getPosition().x;
         int y = vaisseau.getPosition().y + 15;
-        missile.setPosition(Vector2f(x, y));
+        laser.setPosition(Vector2f(x, y));
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
@@ -238,18 +298,19 @@ int main() {
                 }
             }
             
-            // Collision des météores avec le missile/laser :
+            // Collision des météores avec le laser :
 
             if (event.type == Event::KeyPressed) {
                 if (event.key.code == Keyboard::Space && canShoot) {
-                    if (missile.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b)
+                    if (laser.getGlobalBounds().intersects(meteor1.getGlobalBounds()) && meteor1b)
                         meteor1b = false;
-                    if (missile.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b)
+                    if (laser.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b)
                         meteor2b = false;
-                    if (missile.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b)
+                    if (laser.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b)
                         meteor3b = false;
-                    if (missile.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b)
+                    if (laser.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b)
                         meteor4b = false;
+                    laser_sound.play();
                     shooting = true;
                     canShoot = false;
                     shoot.restart();
@@ -263,6 +324,7 @@ int main() {
 
         if (cd >= 3 and canShoot == false) {
             canShoot = true;
+            reload_sound.play();
         }
 
         temps = clock.getElapsedTime().asSeconds();
@@ -309,7 +371,7 @@ int main() {
         }
 
         if (invicibilityb) {
-            invincibility.move(-vitesse / 2, 0);
+            invincibility.move(-vitesse / 2.0f, 0);
             if (invincibility.getPosition().x < -100) {
                 invicibilityb = false;
                 inv_delay = 600;
@@ -319,10 +381,10 @@ int main() {
     // Movement du vaisseau :
 
         if (Keyboard::isKeyPressed(Keyboard::Up) && vaisseau.getPosition().y > 0) {
-            vaisseau.move(0, -vitesse/2);
+            vaisseau.move(0, -vitesse/2.0f);
         }
         if (Keyboard::isKeyPressed(Keyboard::Down) && vaisseau.getPosition().y < 950) {
-            vaisseau.move(0, +vitesse/2);
+            vaisseau.move(0, +vitesse / 2.0f);
         }
 
     //Texture du vaisseau si power up invincibilité :
@@ -362,6 +424,7 @@ int main() {
                 hit_delay = delay*120;
                 explosion.setPosition(meteor1.getPosition());
                 explosion_delay = 60;
+                explosion_sound.play();
             }
             if (vaisseau.getGlobalBounds().intersects(meteor2.getGlobalBounds()) && meteor2b) {
                 meteor2b = false;
@@ -370,6 +433,7 @@ int main() {
                 hit_delay = delay*120;
                 explosion.setPosition(meteor2.getPosition());
                 explosion_delay = 60;
+                explosion_sound.play();
             }
             if (vaisseau.getGlobalBounds().intersects(meteor3.getGlobalBounds()) && meteor3b) {
                 meteor3b = false;
@@ -378,6 +442,7 @@ int main() {
                 hit_delay = delay*120;
                 explosion.setPosition(meteor3.getPosition());
                 explosion_delay = 60;
+                explosion_sound.play();
             }
             if (vaisseau.getGlobalBounds().intersects(meteor4.getGlobalBounds()) && meteor4b) {
                 meteor4b = false;
@@ -386,12 +451,14 @@ int main() {
                 hit_delay = delay*120;
                 explosion.setPosition(meteor4.getPosition());
                 explosion_delay = 60;
+                explosion_sound.play();
             }
         }
         if (vaisseau.getGlobalBounds().intersects(invincibility.getGlobalBounds()) && invicibilityb) {
             invicibilityb = false;
             inv_state = true;
             inv_delay = 900;
+            powerup_sound.play();
         }
 
 
@@ -422,6 +489,17 @@ int main() {
             }
         }
 
+    // Gestion de la musique :
+
+        if (main_music.getStatus() != Sound::Playing && !gameover) {
+            main_music.play();
+        }
+
+        if (gameover && gameover_music.getStatus() != Sound::Playing) {
+            main_music.stop();
+            gameover_music.play();
+        }
+
     // Display de l'écran de départ :
 
         if (startscreen) {
@@ -444,54 +522,55 @@ int main() {
             if (vies == 0) {
                 gameover = true;
                 aff_score.setPosition(610, 550);
+                death_sound.play();
                 }
-                window.clear();
-                window.draw(backgroundimage);
-                window.draw(aff_score);
-                window.draw(coeur);
-                  if (vies >= 2) {
-                      coeur.setPosition(200, 75);
-                      window.draw(coeur);
-                      if (vies == 3) {
-                          coeur.setPosition(300, 75);
-                          window.draw(coeur);
-                        }
-                    }
-                coeur.setPosition(100, 75);
-                if (canShoot) {
-                    window.draw(can_shoot_indicator);
-                }
-                else {
-                    can_shoot_indicator.setFillColor(Color::Red);
-                    window.draw(can_shoot_indicator);
-                    can_shoot_indicator.setFillColor(Color::Green);
-                }
-                window.draw(aff_can_shoot);
-                if (meteor1b)
-                    window.draw(meteor1);
-                if (meteor2b)
-                    window.draw(meteor2);
-                if (meteor3b)
-                    window.draw(meteor3);
-                if (meteor4b)
-                    window.draw(meteor4);
-                if (invicibilityb)
-                    window.draw(invincibility);
-                if (shooting){
-                    window.draw(missile);
-                    shooting = false;}
-                window.draw(vaisseau);
-                if (explosion_delay > 0) {
-                    window.draw(explosion);
-                    explosion_delay--;
-                }
-                window.display();
-                temps++;
-                if (inv_delay > 0)
-                    inv_delay--;
-                if (hit_delay > 0)
-                    hit_delay--;
+            window.clear();
+            window.draw(backgroundimage);
+            window.draw(aff_score);
+            window.draw(coeur);
+            if (vies >= 2) {
+                 coeur.setPosition(200, 75);
+                 window.draw(coeur);
+                 if (vies == 3) {
+                     coeur.setPosition(300, 75);
+                     window.draw(coeur);
+                 }
             }
+            coeur.setPosition(100, 75);
+            if (canShoot) {
+                window.draw(can_shoot_indicator);
+            }
+            else {
+                can_shoot_indicator.setFillColor(Color::Red);
+                window.draw(can_shoot_indicator);
+                can_shoot_indicator.setFillColor(Color::Green);
+            }
+            window.draw(aff_can_shoot);
+            if (meteor1b)
+                window.draw(meteor1);
+            if (meteor2b)
+                window.draw(meteor2);
+            if (meteor3b)
+                window.draw(meteor3);
+            if (meteor4b)
+                window.draw(meteor4);
+            if (invicibilityb)
+                window.draw(invincibility);
+            if (shooting){
+                window.draw(laser);
+                shooting = false;}
+            window.draw(vaisseau);
+            if (explosion_delay > 0) {
+                window.draw(explosion);
+                explosion_delay--;
+            }
+            window.display();
+            temps++;
+            if (inv_delay > 0)
+                inv_delay--;
+            if (hit_delay > 0)
+               hit_delay--;
+        }
 
     // Display de l'écran de game over :
 
