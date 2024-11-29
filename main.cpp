@@ -30,6 +30,8 @@ bool blink1 = true;
 bool blink2 = false;
 bool temp;
 
+
+
 int main() {
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "A Travers la Ceinture v0.8");
     Clock scoreclock;
